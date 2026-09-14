@@ -25,6 +25,9 @@ exists yet:
 | `/party/` | planned | Party game / challenge randomizer. |
 | `/escape/` | planned | Escape-room-style linked puzzle chain. |
 
+More ideas than this table — home, work, parents, gifts, and the patterns
+they share — live in [`IDEAS.md`](IDEAS.md).
+
 Each page is self-contained (own inline CSS/JS, own font links) rather than
 sharing a common assets folder, so editing or breaking one page can't affect
 another.
