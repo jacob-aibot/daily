@@ -275,6 +275,24 @@
 
   .note.turning{ opacity: 0; }
 
+  /* Only present on the rare date a note is pinned with a song (see
+     PINNED_SONGS); [hidden] keeps it out of layout entirely on every other
+     day rather than just invisible. */
+  .song-link{
+    display:inline-flex;
+    margin-top:0.55rem;
+    font-family:'Archivo', sans-serif;
+    font-size:0.72rem;
+    letter-spacing:0.04em;
+    color: var(--accent-soft);
+    text-decoration:none;
+    min-height:44px;
+    align-items:center;
+    padding:0.3rem 0;
+  }
+  .song-link[hidden]{ display:none; }
+  .song-link:hover, .song-link:focus-visible{ color: var(--accent); }
+
   /* explicit tap target, visually quiet: the visible text stays small, but
      the hit area is a full 44px tall via padding + flex centering, not the
      text's own line box. */
@@ -335,6 +353,7 @@
       <p class="flower-name" id="flowerName">peony</p>
       <p class="flower-meaning" id="flowerMeaning">devotion &amp; happy love</p>
     </div>
+    <a class="song-link" id="songLink" target="_blank" rel="noopener" hidden><span aria-hidden="true">♫</span>&nbsp;<span id="songLabel"></span></a>
   </div>
   <button class="again" id="again" type="button">one more →</button>
 </div>
@@ -1675,7 +1694,21 @@ var RECENTLY_SEEN_HOLD = 20;   // days to keep them clear of
 var PINNED_NOTES = {
   '2026-09-11': "As Rebecca Black once said… IT'S FRIDAY!!! Excited for another day of Daner ❤️",
   '2026-09-12': "SOCCER DAY… I mean farmers market day… I mean I LOVE YOU BABE",
-  '2026-09-13': "I love you everyday and forever… Soooo want some kit 👀"
+  '2026-09-13': "I love you everyday and forever… Soooo want some kit 👀",
+  '2026-09-15': "a good morning deserves a good song ❤️ can't wait to dance with you again"
+};
+
+/* A song to go with one particular pinned date, same keying as PINNED_NOTES
+   and deliberately kept as a separate map rather than folded into it: most
+   pinned notes carry no song, and every existing PINNED_NOTES entry stays a
+   plain string this way instead of needing a {text, song} shape. Shown only
+   alongside the arrival note (see showNote) — "one more" never touches it. */
+var PINNED_SONGS = {
+  '2026-09-15': {
+    title: 'Cosmic Love',
+    artist: 'Florence + the Machine',
+    url: 'https://www.youtube.com/watch?v=2EIeUlvHAiM'
+  }
 };
 
 function localDateKey(now){
@@ -1784,16 +1817,28 @@ function draw(){
 }
 
 var noteEl = document.getElementById('note');
+var songLinkEl = document.getElementById('songLink');
+var songLabelEl = document.getElementById('songLabel');
+
+function showPinnedSong(now){
+  var song = PINNED_SONGS[localDateKey(now)];
+  if (!song){ songLinkEl.hidden = true; return; }
+  songLabelEl.textContent = song.title + ' — ' + song.artist;
+  songLinkEl.href = song.url;
+  songLinkEl.hidden = false;
+}
 
 function showNote(first){
   if (first){
     noteEl.textContent = getDailyNote();
+    showPinnedSong();
     return;
   }
   // Never hand back the line already on screen — drawing the note of the day
   // straight after showing it reads like the button did nothing.
   var text = draw();
   if (text === noteEl.textContent && NOTES.length > 2) text = draw();
+  songLinkEl.hidden = true;   // the song belongs to the arrival note only
   if (REDUCE_MOTION){
     noteEl.textContent = text;
     return;
