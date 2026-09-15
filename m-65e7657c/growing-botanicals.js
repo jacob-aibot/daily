@@ -131,8 +131,14 @@
     tl.add({targets:note,opacity:[0,1],translateY:[8,0],duration:850},8500);
     tl.add({targets:identity,opacity:[0,1],duration:600},8750);
     tl.add({targets:again,opacity:[0,.78],duration:400},9050);
+    // Set before the timeline plays, not after: .letter fades in over the
+    // next second and its content was already sitting in the DOM the whole
+    // time (the static markup, stale the moment the note last changed), so
+    // calling this once the timeline finished used to fade in the wrong
+    // line and then snap to the right one. Setting it now means what fades
+    // in is already correct.
+    showNote(true);
     var frame=new URLSearchParams(location.search).get('frame');if(frame!==null)tl.seek(Math.max(0,+frame||0));else tl.play();
-    tl.finished.then(function(){showNote(true);});
   }
   window.renderBotanicalHero=function(hero){
     if(hero.slug==='tulip')return singleTulip();
@@ -231,8 +237,9 @@
     tl.add({targets:letter,opacity:[0,1],translateY:[12,0],duration:1000},10100);
     tl.add({targets:identity,opacity:[0,1],translateY:[6,0],duration:700},10400);
     tl.add({targets:again,opacity:[0,.78],duration:400},10700);
+    // See the comment in playSingleTulip above: set before playing, not after.
+    showNote(true);
     var frame=new URLSearchParams(location.search).get('frame');
     if(frame!==null){tl.seek(Math.max(0,+frame||0));}else{tl.play();}
-    tl.finished.then(function(){showNote(true);});
   };
 }());
