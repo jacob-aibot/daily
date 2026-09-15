@@ -72,8 +72,9 @@
     tl.add({targets:note,opacity:[0,1],translateY:[8,0],duration:950},9700);
     tl.add({targets:identity,opacity:[0,1],duration:750},10000);
     tl.add({targets:again,opacity:[0,.78],duration:450},10400);
+    // Set before the timeline plays: see growing-botanicals.js for why.
+    showNote(true);
     var frame=new URLSearchParams(location.search).get('frame');if(frame!==null)tl.seek(Math.max(0,+frame||0));else tl.play();
-    tl.finished.then(function(){showNote(true);});
   }
   window.renderBotanicalHero=function(hero){return hero.slug==='orchid'?render():previousRender(hero);};
   window.playBotanicalHero=function(hero){return hero.slug==='orchid'?play():previousPlay(hero);};

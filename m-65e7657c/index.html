@@ -237,6 +237,28 @@
     margin:0;
   }
 
+  .song-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-top:0.55rem;
+    min-height:44px;
+    padding:0.3rem 0.5rem;
+    font-family:'Archivo', ui-sans-serif, sans-serif;
+    font-size:0.72rem;
+    font-weight:600;
+    letter-spacing:0.03em;
+    color:var(--accent-soft);
+    text-decoration:none;
+    border-bottom:1px solid transparent;
+  }
+  .song-link:hover, .song-link:focus-visible{
+    color:var(--accent);
+    border-bottom-color:currentColor;
+  }
+  .song-link:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; border-radius:4px; }
+  .song-link[hidden]{ display:none; }
+
   /* The note is the only typographic focal point after the flower. */
   .letter{
     position:absolute;
@@ -335,6 +357,7 @@
       <p class="flower-name" id="flowerName">peony</p>
       <p class="flower-meaning" id="flowerMeaning">devotion &amp; happy love</p>
     </div>
+    <a class="song-link" id="songLink" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
   </div>
   <button class="again" id="again" type="button">one more →</button>
 </div>
@@ -1675,8 +1698,23 @@ var RECENTLY_SEEN_HOLD = 20;   // days to keep them clear of
 var PINNED_NOTES = {
   '2026-09-11': "As Rebecca Black once said… IT'S FRIDAY!!! Excited for another day of Daner ❤️",
   '2026-09-12': "SOCCER DAY… I mean farmers market day… I mean I LOVE YOU BABE",
-  '2026-09-13': "I love you everyday and forever… Soooo want some kit 👀"
+  '2026-09-13': "I love you everyday and forever… Soooo want some kit 👀",
+  '2026-09-15': "a good morning deserves a good song ❤️ can't wait to dance with you again"
 };
+
+/* A pinned note can also carry a link — so far always a song, but the field
+   names are generic. Same rules as PINNED_NOTES: keyed by local calendar
+   date, shown only on arrival (never on a "one more" draw), and gone again
+   the moment the date rolls over. Not merged into the PINNED_NOTES entry
+   itself so that a plain-text pin (the far more common case) never has to
+   carry an unused link field. */
+var PINNED_LINKS = {
+  '2026-09-15': { url: 'https://www.youtube.com/watch?v=2EIeUlvHAiM', label: "Cosmic Love — Florence + the Machine" }
+};
+
+function getDailyLink(now){
+  return PINNED_LINKS[localDateKey(now)] || null;
+}
 
 function localDateKey(now){
   var d = parseLocalDateParts(now || new Date());
@@ -1784,12 +1822,26 @@ function draw(){
 }
 
 var noteEl = document.getElementById('note');
+var songLink = document.getElementById('songLink');
 
 function showNote(first){
   if (first){
     noteEl.textContent = getDailyNote();
+    // A link belongs only to the specific arrival note it was pinned
+    // alongside — never to one of the 29 evergreen notes "one more" deals,
+    // so it is set here and nowhere else.
+    var link = getDailyLink();
+    if (link){
+      songLink.href = link.url;
+      songLink.textContent = '\u266A ' + link.label;
+      songLink.hidden = false;
+    } else {
+      songLink.hidden = true;
+      songLink.removeAttribute('href');
+    }
     return;
   }
+  songLink.hidden = true;
   // Never hand back the line already on screen — drawing the note of the day
   // straight after showing it reads like the button did nothing.
   var text = draw();
