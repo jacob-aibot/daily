@@ -286,7 +286,11 @@
     font-family:'Fraunces', Georgia, 'Iowan Old Style', serif;
     font-optical-sizing:auto;
     font-weight:400;
-    font-size:clamp(1.72rem, 7.45vw, 1.95rem);
+    /* --note-scale shrinks an unusually long note so it never grows past the
+       line count every species' artwork has been verified clear of (see
+       fitNoteText below); it is unset for the overwhelming majority of
+       notes, where this is exactly the clamp() that was already here. */
+    font-size:calc(var(--note-scale, 1) * clamp(1.72rem, 7.45vw, 1.95rem));
     line-height:1.12;
     letter-spacing:-0.015em;
     color: var(--paper);
@@ -338,7 +342,7 @@
 
   @media (max-height:700px){
     .bloom-zone{ inset:0; }
-    .note{ font-size:1.72rem; }
+    .note{ font-size:calc(var(--note-scale, 1) * 1.72rem); }
   }
 </style>
 </head>
@@ -1702,7 +1706,8 @@ var PINNED_NOTES = {
   '2026-09-15': "a good morning deserves a good song ❤️ can't wait to dance with you again",
   '2026-09-17': "plot twist — today also requires pants. Even though you look so hot without them 🥵",
   '2026-09-18': "a dance a day keeps the doc at bay 🕺💃 — see you soon my love",
-  '2026-10-06': "your smile lights up a room, be sure to spread it today :) P.S. (do not apply this to your toots)"
+  '2026-10-06': "your smile lights up a room, be sure to spread it today :) P.S. (do not apply this to your toots)",
+  '2026-10-15': "Good morning and goodbye my love ❤️ have fun frolicking in the land of grapes and wine 🍷 but come back to me for the land of sea and salt will miss you :)"
 };
 
 /* A pinned note can also carry a link — so far always a song, but the field
@@ -1827,9 +1832,38 @@ function draw(){
 var noteEl = document.getElementById('note');
 var songLink = document.getElementById('songLink');
 
+// Notes range from a single line to, on the longest pinned ones, seven —
+// comfortably past the 5-line maximum every species' artwork was confirmed
+// clear of (measured directly, not guessed: the deepest-reaching species
+// still leaves a clean margin at 5 lines; longer than that starts crossing
+// into leaf or stem at the smallest screen size tested). Rather than cap
+// pinned notes to a length limit, shrink the font just enough to fit —
+// measured against the actual rendered line count, not character count,
+// so it adapts to whatever width and font size the viewport lands on
+// instead of a guess calibrated to one screen. This runs entirely on text
+// geometry (scrollHeight vs line-height), never on the flower artwork's own
+// position, so it is unaffected by the flower still being mid-animation —
+// unlike a fix tied to the SVG's rendered bounds would be.
+var NOTE_MAX_LINES = 5;
+var NOTE_MIN_SCALE = 0.72;
+var NOTE_SCALE_STEP = 0.06;
+
+function fitNoteText(text){
+  noteEl.textContent = text;
+  noteEl.style.removeProperty('--note-scale');
+  var scale = 1;
+  for (var i = 0; i < 8; i++){
+    var lineHeight = parseFloat(getComputedStyle(noteEl).lineHeight) || 1;
+    var lines = Math.round(noteEl.scrollHeight / lineHeight);
+    if (lines <= NOTE_MAX_LINES || scale <= NOTE_MIN_SCALE) break;
+    scale = Math.max(NOTE_MIN_SCALE, scale - NOTE_SCALE_STEP);
+    noteEl.style.setProperty('--note-scale', scale);
+  }
+}
+
 function showNote(first){
   if (first){
-    noteEl.textContent = getDailyNote();
+    fitNoteText(getDailyNote());
     // A link belongs only to the specific arrival note it was pinned
     // alongside — never to one of the 29 evergreen notes "one more" deals,
     // so it is set here and nowhere else.
@@ -1850,12 +1884,12 @@ function showNote(first){
   var text = draw();
   if (text === noteEl.textContent && NOTES.length > 2) text = draw();
   if (REDUCE_MOTION){
-    noteEl.textContent = text;
+    fitNoteText(text);
     return;
   }
   noteEl.classList.add('turning');
   setTimeout(function(){
-    noteEl.textContent = text;
+    fitNoteText(text);
     noteEl.classList.remove('turning');
   }, 220);
 }
