@@ -1324,7 +1324,13 @@ var BOTANICAL_HEROES = {
   2:{ slug:'orchid',    name:'orchid',    meaning:'rare beauty' },
   3:{ slug:'hydrangea', name:'hydrangea', meaning:'heartfelt gratitude' },
   4:{ slug:'lavender',  name:'lavender',  meaning:'devotion & calm' },
-  5:{ slug:'wisteria',  name:'wisteria',  meaning:'enduring devotion' }
+  5:{ slug:'wisteria',  name:'wisteria',  meaning:'enduring devotion' },
+  6:{ slug:'cosmos',    name:'cosmos',    meaning:'harmony & peace' },
+  7:{ slug:'anemone',   name:'anemone',   meaning:'anticipation' },
+  8:{ slug:'camellia',  name:'camellia',  meaning:'adoration' },
+  9:{ slug:'amaryllis', name:'amaryllis', meaning:'radiant beauty' },
+  10:{ slug:'snowdrop', name:'snowdrop',  meaning:'hope & new beginnings' },
+  11:{ slug:'rose',     name:'rose',      meaning:'true love' }
 };
 
 function renderArt(sp){
@@ -1385,7 +1391,16 @@ var FLOWERS = [
     c:{ deep:'#5c4a8a', light:'#b7a3d9', deep2:'#6f5a9e', light2:'#c3b2e0' },
     stem:{ y1:0, x2:0, y2:0, bow:0, width:0, color:'', leafColor:'#5c7a4e', leaves:[] },
     spike:{ startY:-64, endY:70, bow1:10, bow2:-6, dx:6, stemColor:'#7a9a5c',
-            count:14, floretLen:17, floretW:12, spread:34, taper:true } }
+            count:14, floretLen:17, floretW:12, spread:34, taper:true } },
+
+  // The winter set. Drawn entirely by growing-botanicals.js; these entries
+  // exist only so the rotation and the ?flower= preview can find them.
+  { id:6,  name:'Cosmos' },
+  { id:7,  name:'Anemone' },
+  { id:8,  name:'Camellia' },
+  { id:9,  name:'Amaryllis' },
+  { id:10, name:'Snowdrop' },
+  { id:11, name:'Rose' }
 ];
 
 // ---- rotation math ----
@@ -1475,10 +1490,54 @@ function mondayOnOrAfterParts(dateStr){
 
 var FLOWER_WEEK_ANCHOR = mondayOnOrAfterParts(MIRROR_LAUNCH_DATE);
 
+/* Hand-picked flowers, keyed by the Monday that starts each week. A listed
+   week beats the shuffled rotation; any week not listed falls back to it.
+   This is also what keeps the switch from 6 to 12 species safe: adding
+   species changes FLOWERS.length, which reshuffles every rotation cycle, so
+   without the week of Oct 26 listed here the flower would have changed
+   mid-week the moment the new species shipped. Seasonal picks: amaryllis
+   for Christmas week, snowdrop for the new year, rose for Valentine's. */
+var FLOWER_SCHEDULE = {
+  '2026-10-26':'hydrangea',
+  '2026-11-02':'cosmos',
+  '2026-11-09':'lavender',
+  '2026-11-16':'anemone',
+  '2026-11-23':'orchid',
+  '2026-11-30':'camellia',
+  '2026-12-07':'wisteria',
+  '2026-12-14':'peony',
+  '2026-12-21':'amaryllis',
+  '2026-12-28':'tulip',
+  '2027-01-04':'snowdrop',
+  '2027-01-11':'hydrangea',
+  '2027-01-18':'cosmos',
+  '2027-01-25':'camellia',
+  '2027-02-01':'anemone',
+  '2027-02-08':'rose',
+  '2027-02-15':'snowdrop',
+  '2027-02-22':'wisteria'
+};
+
+function mondayKey(now){
+  var d = parseLocalDateParts(now || new Date());
+  var back = (new Date(d.y, d.m, d.day).getDay() + 6) % 7;   // days since Monday
+  return localDateKey(new Date(d.y, d.m, d.day - back));
+}
+
+function flowerBySlug(slug){
+  for (var i = 0; i < FLOWERS.length; i++){
+    var f = FLOWERS[i], hero = BOTANICAL_HEROES[f.id];
+    if ((f.id === 0 && slug === 'peony') || (hero && hero.slug === slug)) return f;
+  }
+  return null;
+}
+
 function getFeaturedFlower(now){
   var today = parseLocalDateParts(now || new Date());
   var weekOffset = localDaysBetween(FLOWER_WEEK_ANCHOR, today);
   if (weekOffset < 0) return FLOWERS[peonyPosition()];
+  var scheduled = flowerBySlug(FLOWER_SCHEDULE[mondayKey(now)]);
+  if (scheduled) return scheduled;
   var weekIndex = Math.floor(weekOffset / 7);
   // fixedCycleOrder(0) is pinned so its first entry is the peony (see above) —
   // exactly the flower already showing through the launch week. Shifting by
@@ -1707,7 +1766,136 @@ var PINNED_NOTES = {
   '2026-09-17': "plot twist — today also requires pants. Even though you look so hot without them 🥵",
   '2026-09-18': "a dance a day keeps the doc at bay 🕺💃 — see you soon my love",
   '2026-10-06': "your smile lights up a room, be sure to spread it today :) P.S. (do not apply this to your toots)",
-  '2026-10-15': "Good morning and goodbye my love ❤️ have fun frolicking in the land of grapes and wine 🍷 but come back to me for the land of sea and salt will miss you :)"
+  '2026-10-15': "Good morning and goodbye my love ❤️ have fun frolicking in the land of grapes and wine 🍷 but come back to me for the land of sea and salt will miss you :)",
+
+  /* The written-ahead run: one note for every day from Oct 30, 2026 through
+     Feb 26, 2027. Any of them can be swapped by editing its line; a date
+     with no entry falls back to the rotation as before. */
+  // October
+  '2026-10-30': "It's Friday! Do your best impression of someone with their life together for one more day. Then we dance 💃",
+  '2026-10-31': "Happy Halloween 🎃 Scariest thing in this house today: how much I love you. Second scariest: the laundry pile.",
+  // November
+  '2026-11-01': "The clocks fell back, which means one extra hour of today. I plan to spend it bothering you.",
+  '2026-11-02': "New week, new flower: cosmos. Named after the universe — about the size of what I feel for you ✨",
+  '2026-11-03': "Drink some water before your coffee. I'm not your mom, I just like you hydrated and hot.",
+  '2026-11-04': "Halfway through the week. You're doing better than you think — I've seen the evidence.",
+  '2026-11-05': "Fun fact: you're the best part of my day, and the day has barely started.",
+  '2026-11-06': "Friday plan: you be amazing, I'll be impressed. We've rehearsed this.",
+  '2026-11-07': "Saturday. No alarms, no agenda — just you, me, and whatever the farmers market puts in our basket.",
+  '2026-11-08': "Sunday reminder: you're allowed to do absolutely nothing and still be my favorite person.",
+  '2026-11-09': "Lavender's back this week — calming, beautiful, smells amazing. Basically doing an impression of you.",
+  '2026-11-10': "Whatever's on your list today, you're already ahead of everyone still in bed. Low bar. Crushed it.",
+  '2026-11-11': "11/11 — make a wish. Mine already came true. She's standing at this mirror.",
+  '2026-11-12': "You make the hard stuff look easy and the easy stuff look hot. Unfair, honestly.",
+  '2026-11-13': "Friday the 13th 👻 The only unlucky people today are the ones who don't get to come home to you.",
+  '2026-11-14': "Soccer, snacks, or staying in bed — whatever today is, I want to be on your team ⚽",
+  '2026-11-15': "Slow morning. Messy hair. Good coffee. You. That's the whole list.",
+  '2026-11-16': "This week's flower: the anemone. It means anticipation — exactly how I feel waiting for you to come home.",
+  '2026-11-17': "You are a lot of things. \"Too much\" is not one of them.",
+  '2026-11-18': "Small brag: I get to love you. Not a big deal. Just the best thing that's ever happened to me.",
+  '2026-11-19': "If your day needs a hype man, I'm available. Unpaid. Very enthusiastic. Bad at clapping on beat.",
+  '2026-11-20': "Friday! Celebrate responsibly. Or irresponsibly, with me, dancing badly in the kitchen 🕺",
+  '2026-11-21': "Good morning to the only person who can steal the blankets and my heart in the same night.",
+  '2026-11-22': "You worked hard all week. Today your only job is to let yourself rest.",
+  '2026-11-23': "Thanksgiving week, so I'm starting early: I'm grateful for you. That's it. That's the list.",
+  '2026-11-24': "Reminder: you're allowed to take up space. Including most of the bed. I've made my peace with it.",
+  '2026-11-25': "Day before Thanksgiving: hydrate, stretch, and prepare your stomach for greatness 🥧",
+  '2026-11-26': "Happy Thanksgiving ❤️ Of everything on the table today, you're the thing I'm most thankful for.",
+  '2026-11-27': "Leftovers for breakfast is a valid life choice and I fully support it. Good morning, my love.",
+  '2026-11-28': "I hope today is cozy, slow, and full of pie. You deserve all three.",
+  '2026-11-29': "Last day of November. You made it through another month — and made it look good.",
+  '2026-11-30': "New flower: the camellia. It blooms in the dead of winter, which is a very you thing to do.",
+  // December
+  '2026-12-01': "December's here. I'd like to formally request one slow dance in the kitchen per week until New Year's 💃",
+  '2026-12-02': "Your brain is doing a lot. Give it water, a snack, and a compliment. Here's the compliment: you're brilliant.",
+  '2026-12-03': "Every version of you — tired, grumpy, glowing, chaotic — is my favorite version.",
+  '2026-12-04': "Friday affirmation: I am hot. I am capable. I am done answering emails after 5pm.",
+  '2026-12-05': "Saturday mission, should you choose to accept it: hot drink, warm socks, zero obligations ☕",
+  '2026-12-06': "I like who I am when I'm with you. Thank you for that.",
+  '2026-12-07': "Monday again. Be gentle with yourself — you're the only you we've got, and I'm very attached.",
+  '2026-12-08': "Your laugh is my favorite sound. Your snoring is a close second. Kidding. Mostly.",
+  '2026-12-09': "You don't need to have it all figured out. You just need to have breakfast.",
+  '2026-12-10': "If anyone's rude to you today, remember: you're the main character. They're an extra with no lines.",
+  '2026-12-11': "It's Friday and you look like a whole weekend. Good morning, gorgeous.",
+  '2026-12-12': "12/12. Twelve reasons I love you: you, you, you, you, you, you… you get the idea.",
+  '2026-12-13': "Lazy Sunday rules: pajamas are formal wear, and kisses are mandatory.",
+  '2026-12-14': "The peony's back — the very first flower on this mirror. Still blooming. Kind of like us.",
+  '2026-12-15': "Do one thing today just because it makes you happy. Doctor's orders. (I'm not a doctor. Do it anyway.)",
+  '2026-12-16': "You're stronger than this week, smarter than this inbox, and cuter than all of it.",
+  '2026-12-17': "Day 100 of notes on a mirror. Still haven't run out of reasons. Not even close ❤️",
+  '2026-12-18': "Last Friday before the holidays! Hang in there. The cookies are coming 🍪",
+  '2026-12-19': "Wrap gifts, drink cocoa, steal kisses. In that order, or any order.",
+  '2026-12-20': "Tomorrow is the longest night of the year. Good thing I've got you to keep me warm.",
+  '2026-12-21': "Shortest day of the year, so here's a big red amaryllis to make up for it. It only gets brighter from here ☀️",
+  '2026-12-22': "Holiday checklist: ☐ presents ☐ wrapping ☑ being completely in love with you",
+  '2026-12-23': "If the holiday chaos gets loud today, come find me. I'm your quiet corner.",
+  '2026-12-24': "Christmas Eve 🎄 All I want for Christmas is already brushing her teeth right here.",
+  '2026-12-25': "Merry Christmas, my love 🎁 You're my favorite gift, and I didn't even have to wrap you.",
+  '2026-12-26': "Official schedule for today: leftovers, pajamas, a movie, and you. No notes.",
+  '2026-12-27': "The in-between days are my favorite. Nobody knows what day it is, and I get you all to myself.",
+  '2026-12-28': "A tulip for the last week of the year. \"Perfect love,\" says the flower. I agree.",
+  '2026-12-29': "This year had a lot in it. The best part, every single time, was you.",
+  '2026-12-30': "Hot take: you don't need a new-year version of yourself. This one's already incredible.",
+  '2026-12-31': "Last morning of the year. Save me a midnight kiss 🥂",
+  // January 2027
+  '2027-01-01': "Happy New Year 🎉 New year, same favorite person. Let's make this one ours.",
+  '2027-01-02': "New Year's resolution: love you louder. Already off to a great start.",
+  '2027-01-03': "Your only resolution should be to treat yourself as kindly as you treat everyone else.",
+  '2027-01-04': "First flower of the year: the snowdrop. It pushes up through the snow just to say hope is still here. So am I.",
+  '2027-01-05': "Back to the routine. You've got this. I've got coffee. Together we're unstoppable ☕",
+  '2027-01-06': "Reminder: January is just a really long Monday. Be patient with it, and with yourself.",
+  '2027-01-07': "You walk into rooms like you belong there. Because you do.",
+  '2027-01-08': "First Friday of the year. Celebrate it like a big deal — getting through this week was.",
+  '2027-01-09': "Cold outside. Warm in here. You know where to find me 🔥",
+  '2027-01-10': "Sundays with you are my favorite kind of nothing.",
+  '2027-01-11': "Hydrangea this week — heartfelt gratitude. Which is my entire feeling about you, in flower form.",
+  '2027-01-12': "Dear you, at 3pm today: you're doing great. Have a snack. I love you.",
+  '2027-01-13': "You're the kind of person people are lucky to know. I'm the luckiest one.",
+  '2027-01-14': "Brain fog? Normal. Bad hair day? Temporary. Being loved by me? Permanent.",
+  '2027-01-15': "It's Friday! Your reward for this week is one (1) dance party in the kitchen tonight 🕺💃",
+  '2027-01-16': "Here's your official permission slip to stay in pajamas until noon. Signed, me.",
+  '2027-01-17': "In case no one's told you lately: you make the world softer just by being in it.",
+  '2027-01-18': "Cosmos again this week — the flower of harmony. Which is what my day feels like when it starts with you.",
+  '2027-01-19': "You're allowed to be a work in progress and a masterpiece at the same time.",
+  '2027-01-20': "Wednesday is the hump. You'll be over it soon. I'll never be over you.",
+  '2027-01-21': "If today feels heavy, put some of it down tonight. I'll help you carry the rest.",
+  '2027-01-22': "Friday: officially the best day to be you. (Every day is. But especially Friday.)",
+  '2027-01-23': "Saturday soccer energy: run hard, yell a little, celebrate everything ⚽",
+  '2027-01-24': "Good morning. You look like a Sunday morning song. Sorry, it's early, I'm being sappy.",
+  '2027-01-25': "Camellia week. It blooms while everything else waits for spring. You never wait for permission either.",
+  '2027-01-26': "You can't pour from an empty cup, so here's a refill: you're amazing, and I'm so proud of you.",
+  '2027-01-27': "Plot twist: today goes better than expected. Calling it now.",
+  '2027-01-28': "I know you're busy, so I'll keep this short: you're hot. Okay, bye. Love you.",
+  '2027-01-29': "Last Friday of January. We survived the longest month of the year. Celebration dance required 💃",
+  '2027-01-30': "Weekend forecast: 100% chance of me begging you to stay in bed five more minutes.",
+  '2027-01-31': "I'd pick you in every lifetime. Even the ones where I'm a houseplant. Especially those.",
+  // February 2027
+  '2027-02-01': "February! The anemone is back — it means anticipation. Something sweet is coming this month 😉",
+  '2027-02-02': "Happy Groundhog Day. Six more weeks of winter or not, I'd relive any day with you on repeat.",
+  '2027-02-03': "You don't have to earn rest. You're allowed to just take it.",
+  '2027-02-04': "Reminder: you've done hard things before. This is just the next one.",
+  '2027-02-05': "Friday mood: confident, caffeinated, and very kissable.",
+  '2027-02-06': "Saturday plan: farmers market, a walk by the water, and holding your hand the whole time 🌊",
+  '2027-02-07': "One week until Valentine's. I'm already planning. Act surprised.",
+  '2027-02-08': "It's rose week. The flower of true love. Seemed obvious.",
+  '2027-02-09': "You're my favorite notification, my favorite song, and my favorite person to share fries with.",
+  '2027-02-10': "Bold of you to look this good on a Wednesday.",
+  '2027-02-11': "Every morning I get to see you is a good morning. Even the grumpy ones. Especially the grumpy ones.",
+  '2027-02-12': "Friday before Valentine's. Pace yourself — I have a lot of love saved up.",
+  '2027-02-13': "Tomorrow is Valentine's Day, but honestly, I've been celebrating you since the day we met.",
+  '2027-02-14': "Happy Valentine's Day, my love ❤️ Every flower on this mirror has been for you. So is every note. So am I.",
+  '2027-02-15': "The day after Valentine's. Same love, discounted chocolate 🍫",
+  '2027-02-16': "You don't need everything to go right today. You just need to remember who you are.",
+  '2027-02-17': "You're the reason I believe in soulmates. And in cereal for dinner.",
+  '2027-02-18': "Being tired doesn't mean you're failing. It means you're doing a lot. Go easy on yourself.",
+  '2027-02-19': "Friday! Go be fabulous. Come home and be cozy. I'll handle the snacks.",
+  '2027-02-20': "Good morning to my favorite dance partner, adventure buddy, and person to do absolutely nothing with.",
+  '2027-02-21': "The days are getting longer, and I still want to spend every minute of them with you.",
+  '2027-02-22': "Wisteria this week — the flower that keeps on growing. Like how I feel about you, every single day.",
+  '2027-02-23': "Your future is so bright I should've put sunglasses on this mirror 😎",
+  '2027-02-24': "You're doing your best, and your best is honestly pretty spectacular.",
+  '2027-02-25': "Somewhere between the coffee and the chaos, don't forget: you are so loved.",
+  '2027-02-26': "Friday! Another week done, another week of loving you. My favorite streak 💃"
 };
 
 /* A pinned note can also carry a link — so far always a song, but the field

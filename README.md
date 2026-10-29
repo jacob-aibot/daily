@@ -32,7 +32,7 @@ its own random suffix; never rename one after its sticker is written.
 
 | Path | Status | What it is |
 |---|---|---|
-| `/m-65e7657c/` | **built** | Tap-to-reveal note for the bathroom mirror; cycles through 28 lines with no repeat until the deck is exhausted. |
+| `/m-65e7657c/` | **built** | Tap-to-reveal note for the bathroom mirror. A dated note for each day (`PINNED_NOTES` in `index.html`, written through Feb 26, 2027), falling back to a 30-line rotation; a "one more" deck; and one of 12 growing flowers per week, changing Mondays (`FLOWER_SCHEDULE`, hand-picked through the week of Feb 22, 2027, shuffled after). |
 | `/firsts-<random>/` | planned | "First X" wall — a tag per relationship milestone. |
 | `/timeline-<random>/` | planned | Growing memory timeline. |
 | `/mystery-<random>/` | planned | Hidden "mystery button" webpage gag. |

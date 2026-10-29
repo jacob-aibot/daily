@@ -9,24 +9,32 @@
     '<linearGradient id="creamFace" x1="0" y1="0" x2=".65" y2="1"><stop stop-color="#fff0de"/><stop offset=".6" stop-color="#efc3c4"/><stop offset="1" stop-color="#bb718c"/></linearGradient>' +
     '<linearGradient id="violetFace" x1="0" y1="0" x2=".6" y2="1"><stop stop-color="#e6d1f0"/><stop offset=".45" stop-color="#ab8cc5"/><stop offset="1" stop-color="#665084"/></linearGradient>' +
     '<linearGradient id="blueFace" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#e5d9ed"/><stop offset=".4" stop-color="#a7bfe1"/><stop offset="1" stop-color="#607dad"/></linearGradient>' +
+    '<linearGradient id="cosmosFace" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#fde6ee"/><stop offset=".45" stop-color="#e7a0bf"/><stop offset="1" stop-color="#b0507e"/></linearGradient>' +
+    '<linearGradient id="snowFace" x1="0" y1="0" x2=".75" y2="1"><stop stop-color="#fffaf4"/><stop offset=".55" stop-color="#eee5e6"/><stop offset="1" stop-color="#b4a7b6"/></linearGradient>' +
+    '<linearGradient id="camelliaFace" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#ffe9ea"/><stop offset=".42" stop-color="#f0a7b4"/><stop offset="1" stop-color="#bd5a76"/></linearGradient>' +
+    '<linearGradient id="crimsonFace" x1="0" y1="0" x2=".75" y2="1"><stop stop-color="#ffcfc8"/><stop offset=".4" stop-color="#d9485e"/><stop offset="1" stop-color="#7c1a36"/></linearGradient>' +
+    '<linearGradient id="roseDeep" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#f2828f"/><stop offset=".5" stop-color="#b52c4c"/><stop offset="1" stop-color="#5e1129"/></linearGradient>' +
+    '<linearGradient id="snowInner" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fffaf2"/><stop offset=".62" stop-color="#eef0df"/><stop offset="1" stop-color="#8fae6c"/></linearGradient>' +
+    '<linearGradient id="glossyLeaf" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#a3b37c"/><stop offset=".45" stop-color="#4f6c44"/><stop offset="1" stop-color="#22382b"/></linearGradient>' +
     '</defs>';
   function stem(d, width, at, duration, color) {
     parts.push('<path class="grow-stem" d="'+d+'" fill="none" stroke="'+(color||'#738350')+'" stroke-width="'+width+'" stroke-linecap="round" data-at="'+at+'" data-duration="'+(duration||2400)+'"/>');
   }
-  function organ(d, x, y, angle, scale, fill, at, duration, fold) {
+  function organ(d, x, y, angle, scale, fill, at, duration, fold, bare) {
     // Matching path commands make interpolation stable, including in Safari.
     var n=0;
     var closed=d.replace(/-?\d*\.?\d+/g,function(){return '0';});
     var folded=d.replace(/-?\d*\.?\d+/g,function(v){var horizontal=(n++%2===0);return +(Number(v)*(horizontal ? (fold||.12) : .62)).toFixed(3);});
     var organId='botanical-organ-'+serial;
     parts.push('<g transform="translate('+x+' '+y+') rotate('+angle+') scale('+scale+')"><path id="'+organId+'" class="grow-organ" d="'+d+'" data-closed="'+closed+'" data-folded="'+folded+'" data-open="'+d+'" data-at="'+at+'" data-duration="'+(duration||2400)+'" fill="'+fill+'" stroke="#fff0dc" stroke-opacity=".2" stroke-width=".65" stroke-linejoin="round"/>');
-    if(fill==='url(#leafFace)' && d!==slim){
+    var isLeaf=(fill==='url(#leafFace)'||fill==='url(#glossyLeaf)');
+    if(isLeaf && d!==slim && !bare){
       parts.push('<g opacity=".38">');
       stem('M 0 0 Q -3 -49 0 -103',.9,at+700,1700,'#d6d3a0');
       [-1,1].forEach(function(side){[28,47,65].forEach(function(h){stem('M 0 -'+h+' Q '+(side*11)+' -'+(h+9)+' '+(side*19)+' -'+(h+24),.55,at+1000,1400,'#c5ca91');});});
       parts.push('</g>');
     }
-    if(fill!=='url(#leafFace)' && scale>.25){
+    if(!isLeaf && scale>.25 && !bare){
       parts.push('<clipPath id="'+organId+'-clip"><use href="#'+organId+'" xlink:href="#'+organId+'"/></clipPath><g clip-path="url(#'+organId+'-clip)" opacity=".19">');
       stem('M 0 0 Q -16 -29 -24 -72 M 0 0 Q 13 -37 24 -81 M 0 0 Q -1 -44 1 -97',.65,at+1400,1800,'#f2dbce');
       parts.push('</g>');
@@ -38,8 +46,8 @@
   var slim='M 0 0 C -8 -35 -22 -67 -13 -104 C -9 -121 -3 -135 0 -150 C 13 -104 18 -58 0 0 Z';
   var broad='M 0 0 C -23 -17 -47 -33 -48 -65 C -49 -87 -25 -104 -7 -121 C 1 -113 9 -115 12 -104 C 24 -102 24 -92 34 -85 C 35 -75 46 -69 39 -55 C 38 -26 12 -8 0 0 Z';
   var petal='M 0 0 C -24 -9 -47 -33 -43 -65 C -42 -77 -35 -91 -25 -96 C -17 -103 -7 -98 0 -104 C 10 -98 20 -106 28 -96 C 47 -88 50 -59 37 -36 C 27 -17 11 -4 0 0 Z';
-  function foliage(x,y,a,s,at,shape) {
-    organ(shape||leaf,x,y,a,s,'url(#leafFace)',at,2300);
+  function foliage(x,y,a,s,at,shape,fill) {
+    organ(shape||leaf,x,y,a,s,fill||'url(#leafFace)',at,2300);
   }
   function bloomPetal(x,y,a,s,fill,at,d) { organ(d||petal,x,y,a,s,fill,at,2900); }
   function tulip(x,y,s,at,tilt) {
@@ -91,6 +99,215 @@
     ];
     bloomPetal(x,y,angle,s,'url(#violetFace)',at,bells[(variant||0)%3]);
   }
+  /* ---- the winter set: cosmos, anemone, camellia, amaryllis, snowdrop, rose ----
+     Same organs and the same grow-then-open timeline as the species above;
+     only the anatomy differs. */
+  // A cubic stem [x0,y0,x1,y1,x2,y2,x3,y3], plus the point and heading at t
+  // along it, so leaves and heads attach to the drawn curve, not beside it.
+  function curvePath(c){return 'M '+c[0]+' '+c[1]+' C '+c.slice(2).join(' ');}
+  function onCurve(c,t){
+    var u=1-t;
+    var x=u*u*u*c[0]+3*u*u*t*c[2]+3*u*t*t*c[4]+t*t*t*c[6];
+    var y=u*u*u*c[1]+3*u*u*t*c[3]+3*u*t*t*c[5]+t*t*t*c[7];
+    var dx=3*u*u*(c[2]-c[0])+6*u*t*(c[4]-c[2])+3*t*t*(c[6]-c[4]);
+    var dy=3*u*u*(c[3]-c[1])+6*u*t*(c[5]-c[3])+3*t*t*(c[7]-c[5]);
+    return {x:+x.toFixed(2),y:+y.toFixed(2),a:+(Math.atan2(dx,-dy)*180/Math.PI).toFixed(2)};
+  }
+  var round='M 0 0 C -26 -8 -42 -38 -36 -66 C -31 -84 -14 -92 0 -92 C 14 -92 31 -84 36 -66 C 42 -38 26 -8 0 0 Z';
+  var notched='M 0 0 C -10 -12 -22 -42 -23 -72 L -15 -77 L -8 -71 L 0 -79 L 8 -71 L 15 -77 L 23 -72 C 22 -42 10 -12 0 0 Z';
+  var trumpet='M 0 0 C -31 -14 -44 -56 -31 -93 C -23 -109 -9 -117 0 -121 C 9 -117 23 -109 31 -93 C 44 -56 31 -14 0 0 Z';
+  var pointed='M 0 0 C -20 -14 -30 -50 -19 -90 C -13 -104 -5 -112 0 -118 C 5 -112 13 -104 19 -90 C 30 -50 20 -14 0 0 Z';
+  var discPath='M -13 0 C -13 -7 -7 -13 0 -13 C 7 -13 13 -7 13 0 C 13 7 7 13 0 13 C -7 13 -13 7 -13 0 Z';
+  function disc(x,y,r,fill,at){organ(discPath,x,y,0,+(r/13).toFixed(3),fill,at,1500,.6,true);}
+  // count petals fanned round one point, back to front.
+  function ring(count,start,s,fill,at,step,shape,wobble){
+    for(var i=0;i<count;i++){
+      var w=wobble?[1,.93,1.05,.97,1.02][i%5]:1;
+      bloomPetal(0,0,+(start+i*360/count).toFixed(2),+(s*w).toFixed(3),fill,at+i*step,shape);
+    }
+  }
+  function head(x,y,angle,sx,sy){parts.push('<g transform="translate('+x+' '+y+') rotate('+angle+') scale('+sx+' '+sy+')">');}
+  function stamens(count,r0,r1,width,color,tip,tipR,at){
+    for(var i=0;i<count;i++){
+      var a=(i*360/count+(i%2?7:-4))*Math.PI/180,len=r1*(i%3?1:.82);
+      var x0=+(Math.sin(a)*r0).toFixed(2),y0=+(-Math.cos(a)*r0).toFixed(2);
+      var x1=+(Math.sin(a)*len).toFixed(2),y1=+(-Math.cos(a)*len).toFixed(2);
+      stem('M '+x0+' '+y0+' L '+x1+' '+y1,width,at+i*35,700,color);
+      if(tip)disc(x1,y1,tipR,tip,at+500+i*35);
+    }
+  }
+
+  function cosmos(){
+    var stems=[
+      [191,692,170,610,104,520,78,458],
+      [192,692,176,560,132,420,116,312],
+      [194,692,232,600,300,470,302,376],
+      [190,692,206,540,236,380,226,222]
+    ];
+    stems.forEach(function(c,i){
+      stem(curvePath(c),i===0?2.2:3,200+i*180,2900,'#7d9156');
+      // threadlike, finely cut foliage: small slim pairs climbing each stem
+      [.2,.38,.56].forEach(function(t,k){
+        if(i===0&&k===2)return;
+        var p=onCurve(c,t);
+        foliage(p.x,p.y,p.a-48,+(.36-k*.06).toFixed(2),1300+i*160+k*180,slim);
+        foliage(p.x,p.y,p.a+46,+(.33-k*.06).toFixed(2),1420+i*160+k*180,slim);
+      });
+    });
+    // a bud still closed on the low stem
+    var tip=onCurve(stems[0],1);
+    head(tip.x,tip.y,tip.a,1,1);
+    foliage(0,0,-38,.16,3600,slim);foliage(0,0,40,.16,3650,slim);
+    bloomPetal(0,0,-12,.26,'url(#cosmosFace)',3900,round);
+    bloomPetal(0,0,14,.24,'url(#cosmosFace)',4000,round);
+    parts.push('</g>');
+    [[116,312,-14,.8,3300,'url(#cosmosFace)'],[302,376,18,.68,3700,'url(#snowFace)'],[226,222,6,.92,3000,'url(#cosmosFace)']].forEach(function(h,i){
+      head(h[0],h[1],h[2],1,.9);
+      ring(8,i*11,h[3],h[5],h[4],70,notched,true);
+      disc(0,0,13*h[3],'#d9a93f',h[4]+900);
+      stamens(14,3*h[3],11*h[3],1.1,'#b98327','#f0cd6a',1.8*h[3],h[4]+1150);
+      parts.push('</g>');
+    });
+  }
+
+  function anemone(){
+    var stems=[[190,692,170,580,120,470,106,362],[196,692,226,590,290,460,298,340],[194,692,186,560,214,400,202,262]];
+    foliage(186,690,-68,.68,1200,broad);foliage(200,690,70,.64,1500,broad);foliage(192,688,-14,.5,1800,broad);
+    stems.forEach(function(c,i){
+      stem(curvePath(c),3.2,200+i*220,2800,'#6f8650');
+      // the ruff of cut leaves an anemone wears partway up its stem
+      var p=onCurve(c,.62);
+      [-62,-24,22,60].forEach(function(o,k){foliage(p.x,p.y,p.a+o,+(.34-(k%2)*.05).toFixed(2),1700+i*200+k*90,slim);});
+    });
+    [[106,362,-16,.72,3500,.86],[298,340,14,.66,3900,.86],[202,262,4,.96,3000,.94]].forEach(function(h,i){
+      head(h[0],h[1],h[2],1,h[5]);
+      ring(6,i*20,h[3],'url(#snowFace)',h[4],90,round,true);
+      ring(6,i*20+30,+(h[3]*.8).toFixed(3),'url(#snowFace)',h[4]+300,90,round,true);
+      disc(0,0,17*h[3],'#2b2440',h[4]+1000);
+      stamens(18,11*h[3],28*h[3],1.3,'#3b3352','#251d33',2.6*h[3],h[4]+1300);
+      disc(0,0,9*h[3],'#1d1729',h[4]+1500);
+      parts.push('</g>');
+    });
+  }
+
+  function camellia(){
+    var wood='#6b6347',glossy='url(#glossyLeaf)';
+    var main=[182,692,198,600,168,470,196,316];
+    var a=onCurve(main,.36),b=onCurve(main,.72);
+    var side=[a.x,a.y,150,a.y-40,122,a.y-90,104,430];
+    var twig=[b.x,b.y,230,b.y-40,264,b.y-90,286,262];
+    stem(curvePath(main),6,200,2900,wood);
+    stem(curvePath(side),4,1500,1900,wood);
+    stem(curvePath(twig),3.4,2300,1500,wood);
+    // glossy evergreen leaves, alternating along the wood
+    [[main,.16,-58,.62,1300],[main,.28,56,.66,1500],[main,.5,58,.56,1900],[main,.62,-54,.52,2100],[side,.45,-62,.5,2300],[side,.75,54,.42,2700],[twig,.42,56,.44,2900],[twig,.72,-56,.38,3200]].forEach(function(l){
+      var p=onCurve(l[0],l[1]);foliage(p.x,p.y,p.a+l[2],l[3],l[4],leaf,glossy);
+    });
+    function bloom(x,y,ang,s,at,sy){
+      head(x,y,ang,1,sy);
+      ring(7,4,s,'url(#camelliaFace)',at,80,round,true);
+      ring(7,30,+(s*.74).toFixed(3),'url(#camelliaFace)',at+400,80,round,true);
+      ring(5,12,+(s*.5).toFixed(3),'url(#camelliaFace)',at+800,90,round,true);
+      disc(0,0,7*s,'#f0cf72',at+1300);
+      stamens(22,4*s,19*s,1.4,'#e3bb5c','#f6dd90',2.2*s,at+1400);
+      parts.push('</g>');
+    }
+    bloom(104,430,-14,.62,3600,.84);
+    // a bud on the upper twig, still held in its green bracts
+    var t=onCurve(twig,1);
+    head(t.x,t.y,t.a,1,1);
+    bloomPetal(0,0,-10,.3,'url(#camelliaFace)',3700,round);bloomPetal(0,0,12,.28,'url(#camelliaFace)',3850,round);
+    foliage(0,4,-34,.2,3300,leaf,glossy);foliage(0,4,36,.2,3350,leaf,glossy);
+    parts.push('</g>');
+    bloom(196,316,3,1,3000,.92);
+  }
+
+  function amaryllis(){
+    // strap leaves first, behind the flower stalk
+    [[-30,1.35],[26,1.48],[-12,1.12],[44,1.06]].forEach(function(l,k){foliage(194+k*3,692,l[0],l[1],600+k*220,slim);});
+    stem('M 196 692 C 190 590 204 470 198 372',8,200,2700,'#7a9150');
+    var heads=[[108,330,-58,.74,3300],[288,334,60,.72,3600],[198,240,-4,.8,3000]];
+    heads.forEach(function(h,i){stem('M 198 372 Q '+((198+h[0])/2)+' '+(h[1]+14)+' '+h[0]+' '+h[1],3,2300+i*150,1200,'#7a9150');});
+    foliage(198,374,-22,.22,2400,slim);foliage(198,374,24,.2,2450,slim);
+    heads.forEach(function(h){
+      head(h[0],h[1],h[2],1,.8);
+      ring(3,0,h[3],'url(#crimsonFace)',h[4],110,trumpet);
+      ring(3,60,+(h[3]*.92).toFixed(3),'url(#crimsonFace)',h[4]+250,110,trumpet);
+      ring(6,30,+(h[3]*.34).toFixed(3),'url(#snowInner)',h[4]+700,40,pointed);
+      // stamens fall from the throat whichever way the flower faces
+      parts.push('<g transform="rotate('+(-h[2])+')">');
+      for(var k=0;k<6;k++){var dx=(k-2.5)*7;stem('M 0 0 Q '+(dx*.5)+' 20 '+dx+' 30 Q '+(dx*1.1)+' 34 '+(dx*1.2)+' 31',1.1,h[4]+1300+k*60,900,'#f1e4c4');disc(+(dx*1.2).toFixed(2),31,2.4,'#e8d29a',h[4]+1900+k*60);}
+      parts.push('</g></g>');
+    });
+  }
+
+  function snowdrop(){
+    var tepal='M 0 0 C -12 4 -17 22 -11 40 C -7 50 -2 54 0 56 C 2 54 7 50 11 40 C 17 22 12 4 0 0 Z';
+    var cup='M 0 0 C -9 3 -11 16 -9 28 C -7 33 -3 34 0 33 C 3 34 7 33 9 28 C 11 16 9 3 0 0 Z';
+    // [top x, top y, which way it nods, size], back to front
+    var plants=[[232,246,1,1.4],[150,282,-1,1.3],[300,350,-1,1.15],[96,372,1,1.1],[196,404,1,1.02]];
+    plants.forEach(function(pl,i){
+      var bx=Math.round(192+(pl[0]-196)*.2),tx=pl[0],ty=pl[1],dir=pl[2],s=pl[3],at=200+i*200;
+      foliage(bx+(i%2?-4:4),692,(i-2)*9+(i%2?-8:8),+(.62+s*.22).toFixed(2),1000+i*150,slim);
+      stem('M '+bx+' 692 C '+bx+' 560 '+tx+' '+(ty+120)+' '+tx+' '+ty,2.6,at,2600,'#7b9366');
+      var px=tx+dir*26,py=ty+10;
+      stem('M '+tx+' '+ty+' Q '+(tx+dir*16)+' '+(ty-18)+' '+px+' '+py,1.6,at+2200,700,'#7b9366');
+      foliage(tx,ty+2,-dir*14,.16,at+2300,slim);
+      parts.push('<g transform="translate('+px+' '+py+') rotate('+(-dir*10)+') scale('+s+')">');
+      bloomPetal(0,6,0,.9,'url(#snowFace)',at+2800,tepal);
+      bloomPetal(0,6,0,.62,'url(#snowInner)',at+3100,cup);
+      bloomPetal(0,6,36,.96,'url(#snowFace)',at+3000,tepal);
+      bloomPetal(0,6,-36,.96,'url(#snowFace)',at+3150,tepal);
+      disc(0,3,4.6,'#8faa6a',at+2500);
+      parts.push('</g>');
+    });
+  }
+
+  function rose(){
+    var green='#5f7548',glossy='url(#glossyLeaf)';
+    var main=[192,692,208,590,176,470,198,330];
+    var a=onCurve(main,.42),b=onCurve(main,.7);
+    var side=[a.x,a.y,150,a.y-30,112,a.y-80,100,404];
+    var twig=[b.x,b.y,236,b.y-30,272,b.y-80,290,246];
+    stem(curvePath(main),5.5,200,2900,green);
+    stem(curvePath(side),3.6,1600,1900,green);
+    stem(curvePath(twig),3,2300,1500,green);
+    var thorn='M -3 0 C -2 -3 0 -8 5 -12 C 3 -6 3 -3 4 0 Z';
+    [[.2,1],[.33,-1],[.55,1],[.8,-1]].forEach(function(th,k){var p=onCurve(main,th[0]);organ(thorn,p.x,p.y,p.a+th[1]*70,1,'#7d6a49',1600+k*200,900,.5,true);});
+    // compound leaves: three leaflets on a short stalk
+    function roseLeaf(c,t,side,at){
+      var p=onCurve(c,t),deg=p.a+side*62,r=deg*Math.PI/180;
+      var ex=+(p.x+Math.sin(r)*44).toFixed(2),ey=+(p.y-Math.cos(r)*44).toFixed(2);
+      var mx=+(p.x+Math.sin(r)*22).toFixed(2),my=+(p.y-Math.cos(r)*22).toFixed(2);
+      stem('M '+p.x+' '+p.y+' L '+ex+' '+ey,1.4,at,600,green);
+      foliage(mx,my,deg-52,.3,at+300,broad,glossy);
+      foliage(mx,my,deg+52,.3,at+420,broad,glossy);
+      foliage(ex,ey,deg,.36,at+540,broad,glossy);
+    }
+    roseLeaf(main,.18,-1,1300);roseLeaf(main,.3,1,1600);roseLeaf(main,.58,1,1900);roseLeaf(side,.5,-1,2600);roseLeaf(twig,.45,1,3000);
+    function bloom(x,y,ang,s,at,sy){
+      head(x,y,ang,1,sy);
+      ring(5,10,s,'url(#crimsonFace)',at,90,petal,true);
+      ring(5,46,+(s*.8).toFixed(3),'url(#crimsonFace)',at+350,90,petal,true);
+      ring(5,22,+(s*.6).toFixed(3),'url(#roseDeep)',at+700,90,petal,true);
+      ring(4,60,+(s*.42).toFixed(3),'url(#roseDeep)',at+1050,90,petal,true);
+      // the tight heart, a spiral of petal edges
+      parts.push('<g transform="scale('+s+')">');
+      disc(0,0,12,'url(#roseDeep)',at+1300);
+      stem('M 0 -4 C 7 -5 8 3 3 6 C -4 10 -11 3 -9 -4 C -7 -14 7 -17 13 -9 C 20 1 13 16 0 17 C -13 18 -22 7 -20 -6',1.8,at+1500,1500,'#5a0f26');
+      parts.push('</g></g>');
+    }
+    bloom(100,404,-20,.62,3500,.62);
+    var t=onCurve(twig,1);
+    head(t.x,t.y,t.a,1,1);
+    bloomPetal(0,0,-8,.3,'url(#crimsonFace)',3600,pointed);bloomPetal(0,0,10,.28,'url(#roseDeep)',3750,pointed);
+    foliage(0,2,-40,.2,3300,slim);foliage(0,2,42,.2,3350,slim);foliage(0,2,0,.14,3400,slim);
+    parts.push('</g>');
+    bloom(198,322,4,.95,3000,.9);
+  }
+
+  var SPECIES={cosmos:cosmos,anemone:anemone,camellia:camellia,amaryllis:amaryllis,snowdrop:snowdrop,rose:rose};
+
   function singleTulip(){
     parts=[defs,'<defs><linearGradient id="dustyTulip" x1="0" y1="0" x2="1" y2=".6"><stop stop-color="#e4c5ba"/><stop offset=".36" stop-color="#c79296"/><stop offset=".74" stop-color="#ad7483"/><stop offset="1" stop-color="#784b63"/></linearGradient><linearGradient id="tulipShadow"><stop stop-color="#b38891"/><stop offset="1" stop-color="#71465c"/></linearGradient><filter id="petalPaper" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency=".65" numOctaves="3" seed="8" result="grain"/><feColorMatrix in="grain" type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".08"/></feComponentTransfer><feBlend in="SourceGraphic" mode="soft-light"/><feComposite in2="SourceGraphic" operator="in"/></filter></defs>'];
     stem('M 177 690 C 152 571 219 456 211 351',5.5,120,2180,'#778778');
@@ -192,6 +409,8 @@
           lavenderBell(stemX(otherY),otherY,size*[.82,1.09,.94][k%3],[41,61,48,69][(k+i)%4],3380+i*210+(6-k)*170,k+i+1);
         });
       });
+    } else if(SPECIES[hero.slug]) {
+      SPECIES[hero.slug]();
     } else {
       stem('M 48 214 C 100 133 213 139 336 189',8,200,2900,'#827354');
       [[86,179,-39],[154,156,7],[239,164,50]].forEach(function(p,i){
